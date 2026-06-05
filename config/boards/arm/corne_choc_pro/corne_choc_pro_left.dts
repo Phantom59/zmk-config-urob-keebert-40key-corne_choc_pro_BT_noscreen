@@ -46,11 +46,11 @@
 };
 
 &left_ex1_encoder {
-    status = "okay";
+    status = "disabled";
 };
 
 &left_ex2_encoder {
-    status = "okay";
+    status = "disabled";
 };
 
 &pinctrl {
