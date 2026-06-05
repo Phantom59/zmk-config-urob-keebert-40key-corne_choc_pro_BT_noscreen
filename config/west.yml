@@ -45,10 +45,9 @@ manifest:
       path: modules/zmk/tri-state
     - name: zmk-unicode
       path: modules/zmk/unicode
-
     - name: zephyr
       remote: zmkfirmware
-      revision: 4.2.0
+      revision: v3.5.0+zmk-fixes
       clone-depth: 1
       import:
         name-allowlist:
@@ -58,6 +57,5 @@ manifest:
           - hal_stm32
           - lvgl
           - tinycrypt
-
   self:
     path: config
