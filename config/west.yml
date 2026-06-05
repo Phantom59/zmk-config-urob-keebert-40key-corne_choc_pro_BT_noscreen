@@ -48,7 +48,7 @@ manifest:
 
     - name: zephyr
       remote: zmkfirmware
-      revision: v3.5.0+zmk-fixes
+      revision: 4.2.0+zmk-fixes
       clone-depth: 1
       import:
         name-allowlist:
