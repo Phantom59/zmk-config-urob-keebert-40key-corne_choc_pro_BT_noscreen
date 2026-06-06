@@ -81,7 +81,7 @@
         &kp LGUI LH RH &smart_mouse                           \
     )
 
-#include "../../base.keymap"
+#include "../../../base.keymap"
 
 / {
     chosen {
