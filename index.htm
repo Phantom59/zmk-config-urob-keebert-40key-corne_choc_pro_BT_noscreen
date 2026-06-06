@@ -341,6 +341,7 @@
     <button class="tab" onclick="showPage('shortcuts', this)">Shortcuts</button>
     <button class="tab" onclick="showPage('ipad', this)">iPad</button>
     <button class="tab" onclick="showPage('linux', this)">Linux</button>
+    <button class="tab" onclick="showPage('calc', this)">⚡ Key Calc</button>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════ BASE LAYOUT -->
@@ -909,6 +910,77 @@
 
   </div>
 
+  <!-- ═══════════════════════════════════════════════════════ KEY CALC -->
+  <div id="page-calc" class="page">
+
+    <div class="section">
+      <div class="section-title"><span class="icon">⚡</span> Keystroke Optimizer</div>
+      <p>Type any text or action below. The algorithm finds the minimum keystrokes using Caps Word, Num-word, combos, and magic repeat — then compares against typing everything naively.</p>
+      <textarea id="calc-input" placeholder="Type text, e.g: Hello World 123 or :wq or CTRL+ALT+DEL" style="width:100%;height:72px;padding:10px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:14px;font-family:inherit;resize:vertical;margin-bottom:10px;"></textarea>
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+        <button onclick="runCalc()" style="background:var(--accent);color:#fff;border:none;border-radius:6px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;">Analyze →</button>
+        <button onclick="document.getElementById('calc-input').value='Hello World';runCalc()" style="background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:9px 14px;font-size:12px;cursor:pointer;">Hello World</button>
+        <button onclick="document.getElementById('calc-input').value='HELLO WORLD';runCalc()" style="background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:9px 14px;font-size:12px;cursor:pointer;">ALL CAPS</button>
+        <button onclick="document.getElementById('calc-input').value='Password123!';runCalc()" style="background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:9px 14px;font-size:12px;cursor:pointer;">Password123!</button>
+        <button onclick="document.getElementById('calc-input').value='foo@bar.com';runCalc()" style="background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:9px 14px;font-size:12px;cursor:pointer;">email</button>
+        <button onclick="document.getElementById('calc-input').value='Hello, World!';runCalc()" style="background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:9px 14px;font-size:12px;cursor:pointer;">Hello, World!</button>
+      </div>
+      <div id="calc-output" style="display:none;">
+        <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:140px;background:var(--tip);border-radius:8px;padding:14px;text-align:center;">
+            <div style="font-size:32px;font-weight:800;color:var(--tag-mouse-text);" id="out-optimized">0</div>
+            <div style="font-size:12px;font-weight:600;color:var(--tag-mouse-text);">Optimized keystrokes</div>
+          </div>
+          <div style="flex:1;min-width:140px;background:var(--bg3);border-radius:8px;padding:14px;text-align:center;">
+            <div style="font-size:32px;font-weight:800;color:var(--text2);" id="out-naive">0</div>
+            <div style="font-size:12px;font-weight:600;color:var(--text2);">Naive (no optimization)</div>
+          </div>
+          <div style="flex:1;min-width:140px;background:var(--warning);border-radius:8px;padding:14px;text-align:center;">
+            <div style="font-size:32px;font-weight:800;color:var(--warning-text);" id="out-saved">0</div>
+            <div style="font-size:12px;font-weight:600;color:var(--warning-text);">Keystrokes saved</div>
+          </div>
+        </div>
+        <div id="out-segments" style="margin-bottom:16px;"></div>
+        <div id="out-tips" style="margin-bottom:8px;"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span class="icon">🔤</span> Character Cost Table</div>
+      <p style="font-size:12px;">Every character on this keyboard — tap/hold/combo cost and method. <strong>1</strong> = single tap, <strong>2</strong> = shifted or combo, <strong>3</strong> = layer + shift.</p>
+      <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+        <button onclick="filterCost('all')" class="cost-filter active" style="background:var(--accent);color:#fff;border:none;border-radius:4px;padding:5px 12px;font-size:12px;cursor:pointer;">All</button>
+        <button onclick="filterCost(1)" class="cost-filter" style="background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:5px 12px;font-size:12px;cursor:pointer;">1 stroke</button>
+        <button onclick="filterCost(2)" class="cost-filter" style="background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:5px 12px;font-size:12px;cursor:pointer;">2 strokes</button>
+        <button onclick="filterCost(3)" class="cost-filter" style="background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:5px 12px;font-size:12px;cursor:pointer;">3 strokes</button>
+      </div>
+      <div id="char-table"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span class="icon">📝</span> Vim Command Reference</div>
+      <input id="vim-search" oninput="filterVim(this.value)" placeholder="Search commands..." style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px;margin-bottom:12px;">
+      <table id="vim-table">
+        <tr><th>Vim</th><th>What it does</th><th>Keys on this board</th><th style="text-align:right;">Cost</th></tr>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span class="icon">🔧</span> Shortcut Builder</div>
+      <p>Pick modifiers + a key and see exactly how to hit it on this board.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center;">
+        <label style="font-size:13px;display:flex;align-items:center;gap:6px;"><input type="checkbox" id="mod-ctrl" onchange="buildShortcut()"> <kbd>Ctrl</kbd></label>
+        <label style="font-size:13px;display:flex;align-items:center;gap:6px;"><input type="checkbox" id="mod-alt"  onchange="buildShortcut()"> <kbd>Alt</kbd></label>
+        <label style="font-size:13px;display:flex;align-items:center;gap:6px;"><input type="checkbox" id="mod-shift" onchange="buildShortcut()"> <kbd>Shift</kbd></label>
+        <label style="font-size:13px;display:flex;align-items:center;gap:6px;"><input type="checkbox" id="mod-gui"  onchange="buildShortcut()"> <kbd>GUI/Win/⌘</kbd></label>
+        <span style="color:var(--text2);font-size:13px;">+</span>
+        <input id="shortcut-key" oninput="buildShortcut()" maxlength="1" placeholder="key" style="width:50px;padding:6px;border-radius:4px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:14px;text-align:center;">
+      </div>
+      <div id="shortcut-output" style="background:var(--bg3);border-radius:8px;padding:14px;font-size:13px;color:var(--text2);min-height:48px;">Select modifiers and a key above.</div>
+    </div>
+
+  </div>
+
   <!-- ═══════════════════════════════════════════════════════ LINUX -->
   <div id="page-linux" class="page">
 
@@ -992,7 +1064,586 @@
 </div>
 
 <script>
-  // Theme
+// ═══════════════════════════════════════════════════════════════
+// KEY CALC — KEYSTROKE OPTIMIZER
+// ═══════════════════════════════════════════════════════════════
+
+// Every character: {cost, method, keys}
+// cost = number of physical key actions
+// method = how you produce it
+// keys = what to physically press (display string)
+const CHAR_INFO = {
+  // ── Base layer (Colemak-DH) — 1 keystroke ──────────────────
+  'q':{cost:1,method:'base',     keys:'Q pos'},
+  'w':{cost:1,method:'base',     keys:'W pos'},
+  'f':{cost:1,method:'base',     keys:'F pos'},
+  'p':{cost:1,method:'base',     keys:'P pos'},
+  'b':{cost:1,method:'base',     keys:'B pos'},
+  'j':{cost:1,method:'base',     keys:'J pos'},
+  'l':{cost:1,method:'base',     keys:'L pos'},
+  'u':{cost:1,method:'base',     keys:'U pos'},
+  'y':{cost:1,method:'base',     keys:'Y pos'},
+  "'":{cost:1,method:'base',     keys:"' pos"},
+  'a':{cost:1,method:'base',     keys:'A pos'},
+  'r':{cost:1,method:'base',     keys:'R pos'},
+  's':{cost:1,method:'base',     keys:'S pos'},
+  't':{cost:1,method:'base',     keys:'T pos'},
+  'g':{cost:1,method:'base',     keys:'G pos'},
+  'm':{cost:1,method:'base',     keys:'M pos'},
+  'n':{cost:1,method:'base',     keys:'N pos'},
+  'e':{cost:1,method:'base',     keys:'E pos'},
+  'i':{cost:1,method:'base',     keys:'I pos'},
+  'o':{cost:1,method:'base',     keys:'O pos'},
+  'z':{cost:1,method:'base',     keys:'Z pos'},
+  'x':{cost:1,method:'base',     keys:'X pos'},
+  'c':{cost:1,method:'base',     keys:'C pos'},
+  'd':{cost:1,method:'base',     keys:'D pos'},
+  'v':{cost:1,method:'base',     keys:'V pos'},
+  'k':{cost:1,method:'base',     keys:'K pos'},
+  'h':{cost:1,method:'base',     keys:'H pos'},
+  ',':{cost:1,method:'base',     keys:', pos'},
+  '.':{cost:1,method:'base',     keys:'. pos'},
+  '?':{cost:1,method:'base',     keys:'? pos (qexcl key)'},
+  ' ':{cost:1,method:'thumb',    keys:'Space thumb'},
+  '\n':{cost:1,method:'thumb',   keys:'Enter thumb'},
+  '\t':{cost:2,method:'combo',   keys:'R+S (Tab combo)'},
+
+  // ── Shifted letters — 2 keystrokes ─────────────────────────
+  'A':{cost:2,method:'shift',    keys:'Magic/Shift + A'},
+  'B':{cost:2,method:'shift',    keys:'Magic/Shift + B'},
+  'C':{cost:2,method:'shift',    keys:'Magic/Shift + C'},
+  'D':{cost:2,method:'shift',    keys:'Magic/Shift + D'},
+  'E':{cost:2,method:'shift',    keys:'Magic/Shift + E'},
+  'F':{cost:2,method:'shift',    keys:'Magic/Shift + F'},
+  'G':{cost:2,method:'shift',    keys:'Magic/Shift + G'},
+  'H':{cost:2,method:'shift',    keys:'Magic/Shift + H'},
+  'I':{cost:2,method:'shift',    keys:'Magic/Shift + I'},
+  'J':{cost:2,method:'shift',    keys:'Magic/Shift + J'},
+  'K':{cost:2,method:'shift',    keys:'Magic/Shift + K'},
+  'L':{cost:2,method:'shift',    keys:'Magic/Shift + L'},
+  'M':{cost:2,method:'shift',    keys:'Magic/Shift + M'},
+  'N':{cost:2,method:'shift',    keys:'Magic/Shift + N'},
+  'O':{cost:2,method:'shift',    keys:'Magic/Shift + O'},
+  'P':{cost:2,method:'shift',    keys:'Magic/Shift + P'},
+  'Q':{cost:2,method:'shift',    keys:'Magic/Shift + Q'},
+  'R':{cost:2,method:'shift',    keys:'Magic/Shift + R'},
+  'S':{cost:2,method:'shift',    keys:'Magic/Shift + S'},
+  'T':{cost:2,method:'shift',    keys:'Magic/Shift + T'},
+  'U':{cost:2,method:'shift',    keys:'Magic/Shift + U'},
+  'V':{cost:2,method:'shift',    keys:'Magic/Shift + V'},
+  'W':{cost:2,method:'shift',    keys:'Magic/Shift + W'},
+  'X':{cost:2,method:'shift',    keys:'Magic/Shift + X'},
+  'Y':{cost:2,method:'shift',    keys:'Magic/Shift + Y'},
+  'Z':{cost:2,method:'shift',    keys:'Magic/Shift + Z'},
+
+  // ── Morph keys ──────────────────────────────────────────────
+  '!':{cost:2,method:'morph',    keys:'Shift + ? key'},
+  ';':{cost:2,method:'morph',    keys:'Shift + , key'},
+  ':':{cost:2,method:'morph',    keys:'Shift + . key'},
+  '<':{cost:3,method:'morph',    keys:'Ctrl+Shift + , key'},
+  '>':{cost:3,method:'morph',    keys:'Ctrl+Shift + . key'},
+  '"':{cost:2,method:'shift',    keys:"Shift + '"},
+
+  // ── Numbers — 2 keystrokes (Num-word + digit) ───────────────
+  '0':{cost:2,method:'num-word', keys:'Num thumb → 0 pos (A)'},
+  '1':{cost:2,method:'num-word', keys:'Num thumb → 1 pos (Z)'},
+  '2':{cost:2,method:'num-word', keys:'Num thumb → 2 pos (X)'},
+  '3':{cost:2,method:'num-word', keys:'Num thumb → 3 pos (C)'},
+  '4':{cost:2,method:'num-word', keys:'Num thumb → 4 pos (R)'},
+  '5':{cost:2,method:'num-word', keys:'Num thumb → 5 pos (S)'},
+  '6':{cost:2,method:'num-word', keys:'Num thumb → 6 pos (T)'},
+  '7':{cost:2,method:'num-word', keys:'Num thumb → 7 pos (W)'},
+  '8':{cost:2,method:'num-word', keys:'Num thumb → 8 pos (F)'},
+  '9':{cost:2,method:'num-word', keys:'Num thumb → 9 pos (P)'},
+
+  // ── Combos — 2 simultaneous keys ────────────────────────────
+  '@':{cost:2,method:'combo',    keys:'Q+A simultaneously'},
+  '#':{cost:2,method:'combo',    keys:'W+R simultaneously'},
+  '$':{cost:2,method:'combo',    keys:'F+S simultaneously'},
+  '%':{cost:2,method:'combo',    keys:'P+T simultaneously'},
+  '`':{cost:2,method:'combo',    keys:'B+G simultaneously'},
+  '^':{cost:2,method:'combo',    keys:'J+M simultaneously'},
+  '+':{cost:2,method:'combo',    keys:'L+N simultaneously'},
+  '*':{cost:2,method:'combo',    keys:'U+E simultaneously'},
+  '&':{cost:2,method:'combo',    keys:'Y+I simultaneously'},
+  '_':{cost:2,method:'combo',    keys:"'+O simultaneously"},
+  '\\':{cost:2,method:'combo',   keys:'A+Z simultaneously'},
+  '=':{cost:2,method:'combo',    keys:'R+X simultaneously'},
+  '~':{cost:2,method:'combo',    keys:'S+C simultaneously'},
+  '-':{cost:2,method:'combo',    keys:'T+D simultaneously'},
+  '/':{cost:2,method:'combo',    keys:'M+K simultaneously'},
+  '|':{cost:2,method:'combo',    keys:'E+, simultaneously'},
+  '(':{cost:2,method:'combo',    keys:'N+E simultaneously (right home row)'},
+  ')':{cost:2,method:'combo',    keys:'E+I simultaneously (right home row)'},
+  '[':{cost:2,method:'combo',    keys:'N+E on NAV layer'},
+  ']':{cost:2,method:'combo',    keys:'E+I on NAV layer'},
+  '{':{cost:2,method:'combo',    keys:'N+I simultaneously (right home row)'},
+  '}':{cost:3,method:'layer',    keys:'Shift + { combo'},
+};
+
+// Naive cost: no optimization, just sum individual char costs
+function naiveCost(text) {
+  let total = 0;
+  for (const ch of text) {
+    const info = CHAR_INFO[ch];
+    total += info ? info.cost : 3;
+  }
+  return total;
+}
+
+// ── DP OPTIMIZER ────────────────────────────────────────────────
+// States: 'base', 'caps_word', 'num_word'
+// Finds minimum keystrokes using smart modes.
+function optimizeDP(text) {
+  const n = text.length;
+  if (n === 0) return {total:0, segments:[], naiveTotal:0};
+
+  const INF = 1e9;
+  // dp[i] = {cost, segments[]}
+  const dp = Array.from({length: n+1}, () => ({cost:INF, segments:[]}));
+  dp[0] = {cost:0, segments:[]};
+
+  for (let i = 0; i < n; i++) {
+    if (dp[i].cost === INF) continue;
+    const ch = text[i];
+    const info = CHAR_INFO[ch] || {cost:3, method:'unknown', keys:'unknown'};
+
+    // ── Strategy 1: type character individually ─────────────
+    {
+      const c = dp[i].cost + info.cost;
+      if (c < dp[i+1].cost) {
+        dp[i+1] = {
+          cost: c,
+          segments: [...dp[i].segments, {
+            type:'char', chars:ch, cost:info.cost,
+            label: info.method==='combo'
+              ? `[${ch}] via combo (${info.keys})`
+              : info.method==='num-word'
+              ? `[${ch}] via Num-word`
+              : info.method==='thumb'
+              ? `[${ch}] thumb key`
+              : info.method==='morph'
+              ? `[${ch}] morph key (${info.keys})`
+              : `[${ch}] ${info.method} (${info.cost} stroke${info.cost>1?'s':''})`
+          }]
+        };
+      }
+    }
+
+    // ── Strategy 2: CAPS WORD for uppercase runs ────────────
+    // Caps Word entry costs 2 (Shift+Magic), each uppercase then costs 1
+    // Beats individual shifts when run length ≥ 3
+    if (/[A-Z]/.test(ch)) {
+      let j = i, run = [], cost = 2; // 2 to enter caps-word
+      while (j < n && /[A-Z]/.test(text[j])) {
+        run.push(text[j]);
+        cost += 1;
+        j++;
+      }
+      if (run.length >= 3) {
+        const c = dp[i].cost + cost;
+        if (c < dp[j].cost) {
+          dp[j] = {
+            cost: c,
+            segments: [...dp[i].segments, {
+              type:'caps_word', chars:run.join(''), cost,
+              label:`[${run.join('')}] CAPS WORD: enter(2) + ${run.length} letters(${run.length}) = ${cost} vs naive ${run.length*2}`
+            }]
+          };
+        }
+      }
+    }
+
+    // ── Strategy 3: NUM WORD for digit runs ─────────────────
+    // Num-word tap costs 1, each digit in num-word then costs 1
+    // For N digits: 1+N total vs 2N naive — always wins for N≥2
+    if (/[0-9]/.test(ch)) {
+      let j = i, run = [], cost = 1; // 1 to tap num-word
+      while (j < n && /[0-9]/.test(text[j])) {
+        run.push(text[j]);
+        cost += 1;
+        j++;
+      }
+      if (run.length >= 2) {
+        const c = dp[i].cost + cost;
+        if (c < dp[j].cost) {
+          dp[j] = {
+            cost: c,
+            segments: [...dp[i].segments, {
+              type:'num_word', chars:run.join(''), cost,
+              label:`[${run.join('')}] NUM WORD: enter(1) + ${run.length} digits(${run.length}) = ${cost} vs naive ${run.length*2}`
+            }]
+          };
+        }
+      }
+    }
+
+    // ── Strategy 4: MAGIC REPEAT for doubled chars ──────────
+    // Magic repeat = 1 keystroke regardless of what the char is
+    // Saves when the char itself costs >1 (caps, symbols, numbers)
+    if (i > 0 && text[i] === text[i-1]) {
+      const prevInfo = CHAR_INFO[text[i-1]] || {cost:3};
+      if (prevInfo.cost > 1) {
+        const c = dp[i].cost + 1;
+        if (c < dp[i+1].cost) {
+          dp[i+1] = {
+            cost: c,
+            segments: [...dp[i].segments, {
+              type:'magic', chars:ch, cost:1,
+              label:`[${ch}] Magic Repeat (1 stroke, saved ${prevInfo.cost-1})`
+            }]
+          };
+        }
+      }
+    }
+  }
+
+  const result = dp[n];
+  return {
+    total: result.cost === INF ? naiveCost(text) : result.cost,
+    segments: result.cost === INF ? [] : result.segments,
+    naiveTotal: naiveCost(text)
+  };
+}
+
+// ── SEGMENT COLOURS ─────────────────────────────────────────────
+const SEG_COLORS = {
+  char:       {bg:'var(--bg3)',       border:'var(--border)',       text:'var(--text)'},
+  caps_word:  {bg:'var(--tag-fn)',    border:'var(--tag-fn-text)',  text:'var(--tag-fn-text)'},
+  num_word:   {bg:'var(--tag-num)',   border:'var(--tag-num-text)', text:'var(--tag-num-text)'},
+  magic:      {bg:'var(--tag-nav)',   border:'var(--tag-nav-text)', text:'var(--tag-nav-text)'},
+  combo:      {bg:'var(--tag-mouse)', border:'var(--tag-mouse-text)',text:'var(--tag-mouse-text)'},
+};
+
+function runCalc() {
+  const text = document.getElementById('calc-input').value;
+  if (!text) return;
+
+  const {total, segments, naiveTotal} = optimizeDP(text);
+  const saved = naiveTotal - total;
+
+  document.getElementById('out-optimized').textContent = total;
+  document.getElementById('out-naive').textContent = naiveTotal;
+  document.getElementById('out-saved').textContent = Math.max(0, saved);
+  document.getElementById('calc-output').style.display = 'block';
+
+  // Render segments
+  const segDiv = document.getElementById('out-segments');
+  if (segments.length === 0) {
+    segDiv.innerHTML = '<div style="color:var(--text2);font-size:13px;">Character by character breakdown:</div>';
+    // Fall back to per-char display
+    let html = '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;">';
+    for (const ch of text) {
+      const info = CHAR_INFO[ch] || {cost:3,method:'?',keys:'?'};
+      const col = info.method==='combo' ? SEG_COLORS.combo : info.cost===1 ? SEG_COLORS.char : SEG_COLORS.caps_word;
+      html += `<div title="${info.keys}" style="background:${col.bg};border:1px solid ${col.border};color:${col.text};border-radius:4px;padding:4px 8px;font-size:12px;font-family:monospace;cursor:default;">
+        <span style="font-size:15px;font-weight:700;">${ch===' '?'␣':ch}</span>
+        <span style="font-size:10px;display:block;text-align:center;">${info.cost}</span>
+      </div>`;
+    }
+    html += '</div>';
+    segDiv.innerHTML += html;
+  } else {
+    let html = '<div style="font-size:12px;color:var(--text2);margin-bottom:6px;">Optimal sequence:</div>';
+    html += '<div style="display:flex;flex-wrap:wrap;gap:6px;">';
+    for (const seg of segments) {
+      const col = SEG_COLORS[seg.type] || SEG_COLORS.char;
+      const display = seg.chars.split('').map(c=>c===' '?'␣':c).join('');
+      html += `<div title="${seg.label}" style="background:${col.bg};border:1px solid ${col.border};color:${col.text};border-radius:6px;padding:6px 10px;font-size:13px;cursor:default;max-width:260px;">
+        <span style="font-family:monospace;font-weight:700;font-size:14px;">${display}</span>
+        <span style="font-size:10px;display:block;margin-top:2px;opacity:0.85;">${seg.label.replace(/\[.*?\] /,'')}</span>
+      </div>`;
+    }
+    html += '</div>';
+    segDiv.innerHTML = html;
+  }
+
+  // Tips
+  const tips = [];
+  if (saved >= 2) tips.push(`💡 Saved <strong>${saved}</strong> keystrokes vs typing everything individually.`);
+  segments.forEach(s => {
+    if (s.type==='caps_word') tips.push(`💡 <strong>Caps Word</strong> used for "${s.chars}" — faster than shift-per-letter.`);
+    if (s.type==='num_word') tips.push(`💡 <strong>Num-word</strong> used for "${s.chars}" — tap once, type all digits.`);
+    if (s.type==='magic')    tips.push(`💡 <strong>Magic Repeat</strong> used for repeated "${s.chars}".`);
+  });
+  // Combo tips
+  for (const ch of text) {
+    const info = CHAR_INFO[ch];
+    if (info && info.method==='combo') tips.push(`💡 <strong>${ch}</strong> → ${info.keys}`);
+  }
+  const tipsDiv = document.getElementById('out-tips');
+  tipsDiv.innerHTML = [...new Set(tips)].map(t=>`<div class="tip" style="margin:4px 0;">${t}</div>`).join('');
+}
+
+document.getElementById('calc-input').addEventListener('keydown', e => {
+  if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); runCalc(); }
+});
+
+// ── CHARACTER COST TABLE ─────────────────────────────────────────
+function renderCharTable(filterCostVal) {
+  const entries = Object.entries(CHAR_INFO)
+    .filter(([ch, info]) => filterCostVal==='all' || info.cost===filterCostVal)
+    .sort(([,a],[,b]) => a.cost-b.cost || a.method.localeCompare(b.method));
+
+  const methodColor = {
+    base:'var(--tag-mouse)', shift:'var(--tag-fn)', combo:'var(--tag-nav)',
+    'num-word':'var(--tag-num)', morph:'var(--tag-sys)', thumb:'var(--tip)',
+    layer:'var(--warning)', unknown:'var(--bg3)'
+  };
+  const methodTextColor = {
+    base:'var(--tag-mouse-text)', shift:'var(--tag-fn-text)', combo:'var(--tag-nav-text)',
+    'num-word':'var(--tag-num-text)', morph:'var(--tag-sys-text)', thumb:'var(--tip-text)',
+    layer:'var(--warning-text)', unknown:'var(--text2)'
+  };
+
+  let html = `<table><tr><th>Char</th><th>Cost</th><th>Method</th><th>How to type it</th></tr>`;
+  for (const [ch, info] of entries) {
+    const display = ch==='\n'?'↵ Enter':ch==='\t'?'⇥ Tab':ch===' '?'␣ Space':`<code style="font-size:14px;font-weight:700;">${ch.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</code>`;
+    const cost_color = info.cost===1?'var(--tag-mouse-text)':info.cost===2?'var(--tag-num-text)':'var(--tag-sys-text)';
+    const bg = methodColor[info.method]||'var(--bg3)';
+    const tc = methodTextColor[info.method]||'var(--text2)';
+    html += `<tr>
+      <td>${display}</td>
+      <td><strong style="color:${cost_color};font-size:15px;">${info.cost}</strong></td>
+      <td><span class="badge" style="background:${bg};color:${tc};">${info.method}</span></td>
+      <td style="font-size:12px;">${info.keys}</td>
+    </tr>`;
+  }
+  html += '</table>';
+  document.getElementById('char-table').innerHTML = html;
+}
+
+function filterCost(val) {
+  document.querySelectorAll('.cost-filter').forEach(b => {
+    b.style.background='var(--bg3)'; b.style.color='var(--text)'; b.style.border='1px solid var(--border)';
+  });
+  event.target.style.background='var(--accent)'; event.target.style.color='#fff'; event.target.style.border='none';
+  renderCharTable(val);
+}
+
+// ── VIM COMMAND TABLE ────────────────────────────────────────────
+const VIM_COMMANDS = [
+  // Mode changes
+  {cmd:'i',       desc:'Insert before cursor',       phys:'i',              cost:1, cat:'mode'},
+  {cmd:'a',       desc:'Append after cursor',         phys:'a',              cost:1, cat:'mode'},
+  {cmd:'A',       desc:'Append end of line',          phys:'Shift+A',        cost:2, cat:'mode'},
+  {cmd:'o',       desc:'New line below, insert',      phys:'o',              cost:1, cat:'mode'},
+  {cmd:'O',       desc:'New line above, insert',      phys:'Shift+O',        cost:2, cat:'mode'},
+  {cmd:'I',       desc:'Insert at line start',        phys:'Shift+I',        cost:2, cat:'mode'},
+  {cmd:'R',       desc:'Replace mode',                phys:'Shift+R',        cost:2, cat:'mode'},
+  {cmd:'v',       desc:'Visual (char)',               phys:'v',              cost:1, cat:'mode'},
+  {cmd:'V',       desc:'Visual (line)',               phys:'Shift+V',        cost:2, cat:'mode'},
+  {cmd:'Ctrl+V',  desc:'Visual block',                phys:'Hold N(Ctrl) + v',cost:2,cat:'mode'},
+  {cmd:'ESC',     desc:'Back to Normal mode',         phys:'F+P combo',      cost:2, cat:'mode'},
+
+  // Navigation
+  {cmd:'h j k l', desc:'Left / Down / Up / Right',   phys:'h j k l (base layer)',cost:1,cat:'nav'},
+  {cmd:'w',       desc:'Next word start',             phys:'w',              cost:1, cat:'nav'},
+  {cmd:'b',       desc:'Prev word start',             phys:'b',              cost:1, cat:'nav'},
+  {cmd:'e',       desc:'Next word end',               phys:'e',              cost:1, cat:'nav'},
+  {cmd:'0',       desc:'Start of line',               phys:'Num thumb → 0',  cost:2, cat:'nav'},
+  {cmd:'$',       desc:'End of line',                 phys:'P+T combo (%)',  cost:2, cat:'nav'},
+  {cmd:'gg',      desc:'Top of file',                 phys:'g g',            cost:2, cat:'nav'},
+  {cmd:'G',       desc:'Bottom of file',              phys:'Shift+G or NAV↓ long-hold',cost:2,cat:'nav'},
+  {cmd:'%',       desc:'Jump to matching bracket',    phys:'P+T combo',      cost:2, cat:'nav'},
+  {cmd:'Ctrl+F',  desc:'Page down',                   phys:'Hold N(Ctrl) + f',cost:2,cat:'nav'},
+  {cmd:'Ctrl+B',  desc:'Page up',                     phys:'Hold N(Ctrl) + b',cost:2,cat:'nav'},
+  {cmd:'Ctrl+D',  desc:'Half page down',              phys:'Hold N(Ctrl) + d',cost:2,cat:'nav'},
+  {cmd:'Ctrl+U',  desc:'Half page up',                phys:'Hold N(Ctrl) + u',cost:2,cat:'nav'},
+  {cmd:'zz',      desc:'Centre screen on cursor',     phys:'z z',            cost:2, cat:'nav'},
+
+  // Editing
+  {cmd:'x',       desc:'Delete char under cursor',    phys:'x',              cost:1, cat:'edit'},
+  {cmd:'dd',      desc:'Delete (cut) whole line',     phys:'d d',            cost:2, cat:'edit'},
+  {cmd:'dw',      desc:'Delete word forward',         phys:'d w',            cost:2, cat:'edit'},
+  {cmd:'D',       desc:'Delete to end of line',       phys:'Shift+D',        cost:2, cat:'edit'},
+  {cmd:'cc',      desc:'Change (delete) whole line',  phys:'c c',            cost:2, cat:'edit'},
+  {cmd:'cw',      desc:'Change word',                 phys:'c w',            cost:2, cat:'edit'},
+  {cmd:'C',       desc:'Change to end of line',       phys:'Shift+C',        cost:2, cat:'edit'},
+  {cmd:'yy',      desc:'Copy (yank) line',            phys:'y y',            cost:2, cat:'edit'},
+  {cmd:'yw',      desc:'Yank word',                   phys:'y w',            cost:2, cat:'edit'},
+  {cmd:'p',       desc:'Paste after cursor',          phys:'p',              cost:1, cat:'edit'},
+  {cmd:'P',       desc:'Paste before cursor',         phys:'Shift+P',        cost:2, cat:'edit'},
+  {cmd:'u',       desc:'Undo',                        phys:'u',              cost:1, cat:'edit'},
+  {cmd:'Ctrl+R',  desc:'Redo',                        phys:'Hold N(Ctrl) + r',cost:2,cat:'edit'},
+  {cmd:'.',       desc:'Repeat last command',         phys:'. (base layer)',  cost:1, cat:'edit'},
+  {cmd:'r',       desc:'Replace single char',         phys:'r',              cost:1, cat:'edit'},
+  {cmd:'>>, <<',  desc:'Indent / Dedent line',        phys:'> > or < <',     cost:4, cat:'edit'},
+  {cmd:'~',       desc:'Toggle case',                 phys:'S+C combo (~)',   cost:2, cat:'edit'},
+
+  // Search / Replace
+  {cmd:'/',       desc:'Search forward',              phys:'M+K combo (/) + type + Enter',cost:3,cat:'search'},
+  {cmd:'?',       desc:'Search backward',             phys:'? (base layer) + type + Enter',cost:2,cat:'search'},
+  {cmd:'n',       desc:'Next search result',          phys:'n',              cost:1, cat:'search'},
+  {cmd:'N',       desc:'Prev search result',          phys:'Shift+N',        cost:2, cat:'search'},
+  {cmd:'*',       desc:'Search word under cursor',    phys:'U+E combo (*)',   cost:2, cat:'search'},
+  {cmd:':%s/a/b/g',desc:'Replace all a→b in file',   phys:'ESC(2)+:(2)+%s/a/b/g+Enter',cost:'~14',cat:'search'},
+
+  // Save / Quit
+  {cmd:':w',      desc:'Save',                        phys:'ESC(2) + Shift+.(2) + w + Enter',cost:6,cat:'save'},
+  {cmd:':q',      desc:'Quit',                        phys:'ESC(2) + Shift+.(2) + q + Enter',cost:6,cat:'save'},
+  {cmd:':wq / :x',desc:'Save and quit',              phys:'ESC(2) + :(2) + w + q + Enter',cost:7,cat:'save'},
+  {cmd:':q!',     desc:'Quit without saving',         phys:'ESC(2) + :(2) + q + Shift+?(2) + Enter',cost:8,cat:'save'},
+  {cmd:'ZZ',      desc:'Save and quit (shortcut)',    phys:'Shift+Z + Shift+Z',cost:4,cat:'save'},
+  {cmd:'ZQ',      desc:'Quit no save (shortcut)',     phys:'Shift+Z + Shift+Q',cost:4,cat:'save'},
+
+  // Macros
+  {cmd:'qa',      desc:'Record macro into a',         phys:'q a',            cost:2, cat:'macro'},
+  {cmd:'q',       desc:'Stop recording macro',        phys:'q',              cost:1, cat:'macro'},
+  {cmd:'@a',      desc:'Play macro a',                phys:'Q+A combo (@) + a',cost:3,cat:'macro'},
+  {cmd:'@@',      desc:'Repeat last macro',           phys:'Q+A combo + Q+A combo',cost:4,cat:'macro'},
+  {cmd:'5@a',     desc:'Play macro a × 5',            phys:'Num(1)+5(1)+Q+A(@,2)+a(1)',cost:5,cat:'macro'},
+];
+
+function renderVimTable(filter='') {
+  const f = filter.toLowerCase();
+  const rows = VIM_COMMANDS
+    .filter(r => !f || r.cmd.toLowerCase().includes(f) || r.desc.toLowerCase().includes(f) || r.cat.includes(f))
+    .map(r => {
+      const costColor = typeof r.cost==='number'
+        ? (r.cost<=2?'var(--tag-mouse-text)':r.cost<=4?'var(--tag-num-text)':'var(--tag-sys-text)')
+        : 'var(--tag-sys-text)';
+      const catBadge = {
+        mode:'badge-nav', nav:'badge-mouse', edit:'badge-fn',
+        search:'badge-num', save:'badge-sys', macro:'badge-sys'
+      }[r.cat]||'';
+      return `<tr>
+        <td><code style="font-weight:700;font-size:13px;">${r.cmd.replace(/</g,'&lt;')}</code> <span class="badge ${catBadge}" style="font-size:10px;">${r.cat}</span></td>
+        <td style="font-size:13px;">${r.desc}</td>
+        <td style="font-size:12px;color:var(--text2);">${r.phys.replace(/</g,'&lt;')}</td>
+        <td style="text-align:right;font-weight:700;color:${costColor};">${r.cost}</td>
+      </tr>`;
+    }).join('');
+  document.getElementById('vim-table').innerHTML =
+    '<tr><th>Vim</th><th>What it does</th><th>Keys on this board</th><th style="text-align:right;">Cost</th></tr>' + rows;
+}
+
+function filterVim(val) { renderVimTable(val); }
+
+// ── SHORTCUT BUILDER ─────────────────────────────────────────────
+// Left-hand keys (can use right-hand HRM for these)
+const LEFT_KEYS = new Set(['q','w','f','p','b','a','r','s','t','g','z','x','c','d','v']);
+// Right-hand keys (can use left-hand HRM for these)
+const RIGHT_KEYS= new Set(['j','l','u','y',"'",'m','n','e','i','o','k','h',','  ,'.','?']);
+
+// Which homerow mod keys produce which modifier
+const HRM_LEFT  = {ctrl:'T(hold)',alt:'R(hold)',shift:'S(hold)',gui:'A(hold)'};
+const HRM_RIGHT = {ctrl:'N(hold)',alt:'I(hold)',shift:'E(hold)',gui:'O(hold)'};
+
+function buildShortcut() {
+  const ctrl  = document.getElementById('mod-ctrl').checked;
+  const alt   = document.getElementById('mod-alt').checked;
+  const shift = document.getElementById('mod-shift').checked;
+  const gui   = document.getElementById('mod-gui').checked;
+  const key   = document.getElementById('shortcut-key').value.toLowerCase();
+
+  const mods = [];
+  if (ctrl)  mods.push('ctrl');
+  if (alt)   mods.push('alt');
+  if (shift) mods.push('shift');
+  if (gui)   mods.push('gui');
+
+  const out = document.getElementById('shortcut-output');
+  if (!mods.length && !key) { out.innerHTML='Select modifiers and a key above.'; return; }
+  if (!key) { out.innerHTML='Add a key (letter/number) to complete the shortcut.'; return; }
+
+  const targetRight = RIGHT_KEYS.has(key);
+  const targetLeft  = LEFT_KEYS.has(key);
+
+  let html = '';
+  const lines = [];
+
+  // Check if we can use homerow mods
+  // Condition: all needed mods must be on the opposite hand from the target key
+  const modNamesOnLeft  = mods.filter(m => HRM_LEFT[m]);
+  const modNamesOnRight = mods.filter(m => HRM_RIGHT[m]);
+
+  // Single modifier — can we use HRM?
+  if (mods.length === 1) {
+    const mod = mods[0];
+    if (targetRight && HRM_LEFT[mod]) {
+      lines.push({
+        method:'✅ Homerow mod (fastest)',
+        detail:`Hold <kbd>${HRM_LEFT[mod]}</kbd> (left ${mod}) → tap <kbd>${key.toUpperCase()}</kbd> (right hand)`,
+        cost:2
+      });
+    } else if (targetLeft && HRM_RIGHT[mod]) {
+      lines.push({
+        method:'✅ Homerow mod (fastest)',
+        detail:`Hold <kbd>${HRM_RIGHT[mod]}</kbd> (right ${mod}) → tap <kbd>${key.toUpperCase()}</kbd> (left hand)`,
+        cost:2
+      });
+    } else if ((targetLeft && HRM_LEFT[mod]) || (targetRight && HRM_RIGHT[mod])) {
+      // Same hand — can't use HRM
+      lines.push({
+        method:'⚠️ Same-hand — use sticky mod from NAV',
+        detail:`Hold <kbd>Space</kbd> → tap sticky <kbd>${HRM_LEFT[mod]||HRM_RIGHT[mod]}</kbd> → release Space → tap <kbd>${key.toUpperCase()}</kbd>`,
+        cost:3
+      });
+    }
+  }
+
+  // Multiple modifiers — use sticky mods from NAV
+  if (mods.length > 1 || lines.length === 0) {
+    const modKeys = mods.map(m => `<kbd>${HRM_LEFT[m]||HRM_RIGHT[m]||m}</kbd>`).join(' ');
+    lines.push({
+      method: mods.length > 1 ? '🔢 Multiple mods — stack sticky keys from NAV' : '🔢 NAV sticky mod',
+      detail:`Hold <kbd>Space</kbd> → tap ${modKeys} (stack them) → release Space → tap <kbd>${key.toUpperCase()}</kbd>`,
+      cost: 2 + mods.length
+    });
+  }
+
+  // Always show Shift+key note if shift involved
+  if (shift && mods.length===1) {
+    lines.push({
+      method:'💡 Alt: Magic Shift for single shift',
+      detail:`Tap <kbd>Magic</kbd> thumb → tap <kbd>${key.toUpperCase()}</kbd> (sticky shift)`,
+      cost:2
+    });
+  }
+
+  // Special cases
+  if (ctrl && alt && key==='delete') {
+    lines.unshift({method:'⌨ Special: Ctrl+Alt+Del',detail:'Hold Space → tap R(sk Alt) → tap T(sk Ctrl) → tap Y(Del on NAV)',cost:4});
+  }
+  if (!ctrl && !alt && !shift && !gui && key) {
+    const info = CHAR_INFO[key] || {cost:1, method:'base', keys:'base layer'};
+    lines.push({method:'Base key',detail:`Just tap <kbd>${key.toUpperCase()}</kbd> — ${info.cost} stroke`,cost:info.cost});
+  }
+
+  html = lines.map(l=>`
+    <div style="margin-bottom:10px;padding:10px 12px;background:var(--bg3);border-radius:6px;border:1px solid var(--border);">
+      <div style="font-weight:600;font-size:13px;margin-bottom:4px;">${l.method} <span style="float:right;font-size:12px;color:var(--text2);">~${l.cost} strokes</span></div>
+      <div style="font-size:13px;color:var(--text2);">${l.detail}</div>
+    </div>`).join('');
+
+  // Named shortcut recognition
+  const known = {
+    'ctrl+c':'Copy (or use X+C combo — 2 strokes)',
+    'ctrl+v':'Paste (or use C+D combo — 2 strokes)',
+    'ctrl+x':'Cut (or use X+D combo — 2 strokes)',
+    'ctrl+z':'Undo','ctrl+s':'Save','ctrl+a':'Select all',
+    'ctrl+f':'Find','ctrl+w':'Close tab','ctrl+t':'New tab',
+    'ctrl+alt+delete':'Special — Space→R(Alt)→T(Ctrl)→Y(Del)',
+    'alt+f4':'Built into NAV layer — Space+Q',
+    'gui+r':'Win+R Run — Space→A(GUI)→R',
+    'gui+l':'Lock screen — hold A(GUI) + L'
+  };
+  const combo_key = mods.map(m=>m).join('+')+(mods.length?'+':'')+key;
+  if (known[combo_key]) {
+    html += `<div class="tip">💡 <strong>${combo_key.toUpperCase()}</strong>: ${known[combo_key]}</div>`;
+  }
+
+  out.innerHTML = html || 'Could not determine method for this combination.';
+}
+
+// ── INIT ─────────────────────────────────────────────────────────
+function initCalc() {
+  renderCharTable('all');
+  renderVimTable('');
+}
+
+// ── THEME ─────────────────────────────────────────
   function toggleTheme() {
     const html = document.documentElement;
     const isDark = html.getAttribute('data-theme') === 'dark';
@@ -1011,11 +1662,13 @@
   }
 
   // Tab navigation
+  let calcInited = false;
   function showPage(name, btn) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.getElementById('page-' + name).classList.add('active');
     btn.classList.add('active');
+    if (name === 'calc' && !calcInited) { initCalc(); calcInited = true; }
   }
 </script>
 
